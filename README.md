@@ -9,6 +9,7 @@ to the bot, so it shows up on every device. **➤ Send** has the bot reply with 
 ## Run
 
 ```sh
+cp .env.example .env   # then put your bot token from @BotFather in it
 npm install      # one dependency: terser, which minifies the widget
 npm start        # needs Node >= 22.2 and TELEGRAM_API_KEY in .env
 npm test         # codec / sync / PNG / size tests

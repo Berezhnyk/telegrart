@@ -1,5 +1,5 @@
-// Telegram pixel-art widget bot. Zero dependencies — Node >= 22.2.
-// Run: npm start   (reads TELEGRAM_API_KEY from .env)
+// Telegram pixel-art widget bot. Node >= 22.2; the only dependency is terser, which minifies the widget.
+// Run: npm start   (reads TELEGRAM_API_KEY from .env; see .env.example)
 import { readFileSync, writeFileSync, renameSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { enc, dec } from './src/codec.mjs';
@@ -9,7 +9,7 @@ import { buildWidget } from './src/widget.mjs';
 try { process.loadEnvFile(join(import.meta.dirname, '.env')); } catch {}
 const TOKEN = process.env.TELEGRAM_API_KEY;
 if (!TOKEN) {
-  console.error('Missing TELEGRAM_API_KEY (put it in .env)');
+  console.error('Missing TELEGRAM_API_KEY (copy .env.example to .env and set it)');
   process.exit(1);
 }
 
