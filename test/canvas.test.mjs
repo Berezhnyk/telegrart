@@ -66,8 +66,10 @@ test('PNG export decodes to the right pixels', () => {
   assert.deepEqual([...raw.subarray(1 + 4 * 2, 1 + 4 * 3)], [0, 0, 0, 0]); // pixel (2,0) transparent
 });
 
-test('widget HTML fits Telegram limits', () => {
-  const { html, packed } = buildWidget();
-  assert.ok(packed <= MAX_PACKED);
-  assert.ok(!html.includes('/*CODEC*/') && !html.includes('export '));
+test('widget HTML fits Telegram limits, minified or not', async () => {
+  for (const minify of [true, false]) {
+    const { html, packed } = await buildWidget({ minify });
+    assert.ok(packed <= MAX_PACKED, `minify=${minify}: ${packed}`);
+    assert.ok(!html.includes('/*CODEC*/') && !html.includes('export '));
+  }
 });

@@ -13,7 +13,7 @@ if (!TOKEN) {
   process.exit(1);
 }
 
-const widget = buildWidget();
+const widget = await buildWidget();
 console.log(`widget: ${widget.raw} bytes raw, ${widget.packed}/4096 compressed`);
 
 // ---------- Telegram API ----------

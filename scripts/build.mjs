@@ -7,7 +7,8 @@ import { applyPayload } from '../src/canvas.mjs';
 
 const root = join(import.meta.dirname, '..');
 const dist = join(root, 'dist');
-const { html, raw, packed } = buildWidget();
+const minify = !process.argv.includes('--no-minify');
+const { html, raw, packed } = await buildWidget({ minify });
 mkdirSync(dist, { recursive: true });
 writeFileSync(join(dist, 'widget.html'), html);
 
@@ -15,7 +16,7 @@ const codec = readFileSync(join(root, 'src', 'codec.mjs'), 'utf8').replace(/^exp
 
 // Runs inside each device iframe before the widget: fakes window.TelegramWidget
 // and gives each device its own localStorage, as Telegram does per message per device.
-const mock = (dev, theme) => `<script>
+const mock = (dev, theme) => `<script>{
 const P=parent,H={};
 ${theme ? `for(const[k,v]of Object.entries(${JSON.stringify(theme)}))document.documentElement.style.setProperty('--tg-theme-'+k,v);` : ''}
 Object.defineProperty(window,'localStorage',{value:{getItem:k=>sessionStorage.getItem('${dev}'+k),setItem:(k,v)=>sessionStorage.setItem('${dev}'+k,v)}});
@@ -23,7 +24,7 @@ window.TelegramWidget={chatData:P.server.state||null,HapticFeedback:{impactOccur
 onEvent(t,f){(H[t]=H[t]||[]).push(f)},ready(){},request:d=>P.server.request(d),emit(t){(H[t]||[]).forEach(f=>f())}};
 P.server.clients.push(TelegramWidget);
 addEventListener('load',()=>new ResizeObserver(()=>frameElement.style.height=Math.min(600,document.documentElement.scrollHeight)+'px').observe(document.body));
-</script>`;
+}</script>`;
 
 // JSON string literal that is safe inside an inline <script>
 const js = (s) => JSON.stringify(s).replace(/<\//g, '<\\/');

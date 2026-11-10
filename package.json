@@ -11,5 +11,8 @@
     "start": "node bot.mjs",
     "build": "node scripts/build.mjs",
     "test": "node --test"
+  },
+  "dependencies": {
+    "terser": "^5.51.2"
   }
 }

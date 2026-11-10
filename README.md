@@ -9,9 +9,11 @@ to the bot, so it shows up on every device. **➤ Send** has the bot reply with 
 ## Run
 
 ```sh
-npm start        # needs Node >= 22.2 and TELEGRAM_API_KEY in .env; no npm install needed
-npm test         # codec / sync / PNG tests
+npm install      # one dependency: terser, which minifies the widget
+npm start        # needs Node >= 22.2 and TELEGRAM_API_KEY in .env
+npm test         # codec / sync / PNG / size tests
 npm run build    # writes dist/widget.html (exact payload) and dist/preview.html
+npm run build -- --no-minify   # same, with readable widget JS for debugging in the preview
 ```
 
 `dist/preview.html` runs the widget on two fake "devices" (dark phone and light desktop) against a fake
@@ -56,9 +58,9 @@ sides always encode the same way.
 Telegram widgets run in a QuickJS sandbox, not a WebView. They have no inputs/selects, keyboard,
 network, `getImageData` or `toDataURL`, and no `vh` units. Heights are 50–600 px.
 
-The HTML must be **≤ 32 KB raw and ≤ 4096 bytes after zlib -9**. The current widget is about 4.0 KB
-compressed, so there's little headroom. The bot refuses to start, and `npm run build` fails, if the
-widget goes over. If you need room, running the script through `terser` saves about 300 compressed bytes.
+The HTML must be **≤ 32 KB raw and ≤ 4096 bytes after zlib -9**. The build wraps the widget script
+in a function and minifies it with terser, which brings it to about 3.7 KB compressed (4.0 KB without
+minification). The bot refuses to start, and `npm run build` fails, if the widget goes over.
 
 In production, widgets work only in a **private chat with the bot**. Groups, forwarding and inline
 mode are test-server only for now.
@@ -69,4 +71,4 @@ mode are test-server only for now.
 - `templates/pixelart.widget.html`: the widget (a port of `templates/pixelart.html`, the standalone browser editor)
 - `src/codec.mjs`: shared image/sync encoding
 - `src/canvas.mjs`: payload validation, apply, PNG encoder
-- `src/widget.mjs`: inlines the codec, squeezes whitespace, enforces the size limits
+- `src/widget.mjs`: inlines the codec, minifies with terser, squeezes markup, enforces the size limits
