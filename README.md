@@ -72,3 +72,12 @@ mode are test-server only for now.
 - `src/codec.mjs`: shared image/sync encoding
 - `src/canvas.mjs`: payload validation, apply, PNG encoder
 - `src/widget.mjs`: inlines the codec, minifies with terser, squeezes markup, enforces the size limits
+
+## License
+
+Copyright (c) 2026 Ivan Berezhnyk. Released under the [PolyForm Noncommercial License 1.0.0](LICENSE.md).
+
+You're free to use, study and modify this project for **noncommercial** purposes, such as personal
+projects, hobby bots, research and education. If you share it, you must include the license and its
+`Required Notice:` line. **Commercial use**, such as paid bots, products or services, requires a separate
+license. Contact [Berezhnyk on GitHub](https://github.com/Berezhnyk).
