@@ -1,0 +1,92 @@
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:6px;font:14px system-ui,sans-serif;color:var(--tg-theme-text-color,#ddd);background:var(--tg-theme-bg-color,#16171d);user-select:none}
+.r{display:flex;flex-wrap:wrap;gap:4px}
+button{flex:1;font:inherit;color:inherit;background:var(--tg-theme-secondary-bg-color,#33364a);border:0;border-radius:6px;height:34px;padding:0 6px;white-space:nowrap;cursor:pointer}
+.on{background:var(--tg-theme-button-color,#5865f2);color:var(--tg-theme-button-text-color,#fff)}
+#c{display:block;margin:6px auto;touch-action:none;cursor:crosshair;background:repeating-conic-gradient(#999 0 25%,#666 0 50%) 0 0/16px 16px}
+#pal{margin-bottom:6px}
+#pal i{flex:1 0 11%;height:24px;border-radius:5px;border:2px solid #0003}
+#pal i.on{border-color:var(--tg-theme-text-color,#fff)}
+#st{height:16px;margin-top:4px;text-align:center;font-size:12px;color:var(--tg-theme-hint-color,#888)}
+</style>
+<div class=r id=tb></div>
+<canvas id=c></canvas>
+<div class=r id=pal></div>
+<div class=r><button id=un>↶</button><button id=re>↷</button><button id=mi>⇋</button><button id=gr>#</button><button id=sz></button><button id=cl>✕</button><button id=ex>➤ Send</button></div>
+<div id=st></div>
+<script>
+const $=s=>document.getElementById(s),c=$('c'),x=c.getContext('2d'),M=Math,mk=t=>document.createElement(t),TW=window.TelegramWidget,HF=TW&&TW.HapticFeedback,E=n=>Array(n*n).fill(0);
+/*CODEC*/
+let W,px,pv,Z=1,tool,col,mir=0,grid=1,U=[],R=[],down=0,beg,sx,sy,lx,ly,ink,ax=-1,ay,hx=-1,hy,S,B,busy=0,lt=0,tm,raf,msg='';
+const T=[['pen','✎'],['erase','⌫'],['line','╱'],['rect','▭'],['oval','◯'],['fill','◩'],['pick','⊙']],SZ=[8,16,24,32],sh=()=>/line|rect|oval/.test(tool);
+
+T.forEach(([t,l])=>{let b=mk('button');b.textContent=l;b.id='t'+t;b.onclick=()=>setTool(t);$('tb').append(b)});
+function setTool(t){tool=t;pv=0;ax=-1;T.forEach(([u])=>$('t'+u).classList.toggle('on',u==t));st(sh()?'tap start point':'')}
+PAL.forEach((h,k)=>{let i=mk('i');i.style.background='#'+h;i.onclick=()=>{setCol(k+1);HF&&HF.selectionChanged()};$('pal').append(i)});
+function setCol(k){col=k;let n=0;for(let i of $('pal').children)i.classList.toggle('on',++n==k);if(tool=='erase'||tool=='pick')setTool('pen')}
+function st(m){msg=m;draw()}
+
+function set(i,j,v){if(i>=0&&j>=0&&i<W&&j<W){px[j*W+i]=v;if(mir)px[j*W+W-1-i]=v}}
+function line(a,b,c2,d,v){let dx=M.abs(c2-a),dy=-M.abs(d-b),ex=a<c2?1:-1,ey=b<d?1:-1,e=dx+dy;for(;;){set(a,b,v);if(a==c2&&b==d)break;let f=2*e;if(f>=dy){e+=dy;a+=ex}if(f<=dx){e+=dx;b+=ey}}}
+function fill(i,j,v){let t=px[j*W+i],s=[[i,j]];if(t==v||t==null)return;while(s.length){let[a,b]=s.pop();if(a<0||b<0||a>=W||b>=W||px[b*W+a]!=t)continue;px[b*W+a]=v;s.push([a+1,b],[a-1,b],[a,b+1],[a,b-1])}}
+function shape(i,j){let o=px;px=o.slice();
+ if(tool=='line')line(ax,ay,i,j,ink);
+ else if(tool=='rect'){line(ax,ay,i,ay,ink);line(i,ay,i,j,ink);line(i,j,ax,j,ink);line(ax,j,ax,ay,ink)}
+ else{let cx=(ax+i)/2,cy=(ay+j)/2,rx=M.abs(i-ax)/2+.5,ry=M.abs(j-ay)/2+.5,I=(u,v)=>((u-cx)/rx)**2+((v-cy)/ry)**2<=1;
+  for(let v=M.min(ay,j);v<=M.max(ay,j);v++)for(let u=M.min(ax,i);u<=M.max(ax,i);u++)if(I(u,v)&&!(I(u+1,v)&&I(u-1,v)&&I(u,v+1)&&I(u,v-1)))set(u,v,ink)}
+ [o,px]=[px,o];return o}
+
+function draw(){raf||(raf=requestAnimationFrame(rd))}
+function rd(){raf=0;let p=pv||px,s=Z,w=W*s,b=[];x.clearRect(0,0,w,w);
+ for(let j=0;j<W;j++)for(let i=0,k,v;i<W;i=k){v=p[j*W+i];for(k=i+1;k<W&&p[j*W+k]==v;k++);if(v)(b[v]=b[v]||[]).push([i*s,j*s,(k-i)*s,s])}
+ if(grid&&s>4){b[17]=[];for(let i=1;i<W;i++)b[17].push([i*s,0,1,w],[0,i*s,w,1])}
+ if(mir)b[18]=[[w/2-1,0,2,w]];
+ b.forEach((r,v)=>{x.beginPath();r.forEach(a=>x.rect(...a));x.fillStyle=v>17?'#f0f':v>16?'rgba(128,128,128,.4)':'#'+PAL[v-1];x.fill()});
+ x.beginPath();for(let[a,d]of[[hx,hy],[ax,ay]])a>=0&&x.rect(a*s+.5,d*s+.5,s-1,s-1);x.strokeStyle='#fff';x.stroke();
+ $('sz').textContent=W+'×'+W;$('st').textContent=msg}
+function fit(){let a=M.min(400,$('pal').offsetWidth||300),D=window.devicePixelRatio||1;Z=M.max(1,a/W|0);c.width=c.height=W*Z*D;c.style.width=c.style.height=W*Z+'px';x.setTransform(D,0,0,D,0,0);draw()}
+
+function pos(e){let r=c.getBoundingClientRect();return[M.floor((e.clientX-r.left)/r.width*W),M.floor((e.clientY-r.top)/r.width*W)]}
+c.oncontextmenu=e=>e.preventDefault();
+c.onpointerdown=e=>{[sx,sy]=pos(e);lx=sx;ly=sy;down=1;beg=0;ink=e.button==2||tool=='erase'?0:col;if(e.pointerType=='mouse'&&/pen|erase/.test(tool))go()};
+c.onpointermove=e=>{let[i,j]=pos(e);hx=e.pointerType=='mouse'&&i>=0&&j>=0&&i<W&&j<W?i:-1;hy=j;
+ if(down&&!beg&&/pen|erase/.test(tool)&&M.abs(i-sx)>M.abs(j-sy))go();
+ if(beg){line(lx,ly,i,j,ink);lx=i;ly=j}else if(ax>=0)pv=hx>=0&&shape(i,j);
+ draw()};
+c.onpointerup=()=>{if(down){down=0;beg||go();if(beg)beg=0,end()}sync()};
+c.onpointercancel=()=>{down=0;if(beg)beg=0,end()};
+c.onpointerleave=()=>{hx=-1;pv=0;if(beg)beg=down=0,end();draw()};
+function go(){let i=sx,j=sy,v=px[j*W+i];if(i<0||j<0||i>=W||j>=W)return;
+ if(tool=='pick')return v&&setCol(v);
+ if(sh()){if(ax<0)return ax=i,ay=j,st('now tap end point');snap();px=shape(i,j);pv=0;ax=-1;st('tap start point');return end()}
+ snap();
+ if(tool=='fill'){fill(i,j,ink);mir&&fill(W-1-i,j,ink);return end()}
+ beg=1;set(i,j,ink);draw()}
+function end(){draw();save();later();HF&&HF.impactOccurred('light')}
+function later(){clearTimeout(tm);tm=setTimeout(sync,5100)}
+
+function snap(){U.push([W,px.slice()]);U.length>50&&U.shift();R=[]}
+function hist(a,b){if(a.length){b.push([W,px]);[W,px]=a.pop();pv=0;ax=-1;fit();end()}}
+$('un').onclick=()=>hist(U,R);$('re').onclick=()=>hist(R,U);
+$('cl').onclick=()=>{snap();px=E(W);end()};
+$('sz').onclick=()=>{snap();let n=SZ[(SZ.indexOf(W)+1)%4];px=crop(px,W,n);W=n;pv=0;ax=-1;fit();end()};
+function toggles(){$('mi').classList.toggle('on',!!mir);$('gr').classList.toggle('on',!!grid);draw()}
+$('mi').onclick=()=>{mir=!mir;toggles()};$('gr').onclick=()=>{grid=!grid;toggles()};
+$('ex').onclick=()=>busy?st('busy, tap again'):sync(1);
+document.addEventListener('click',()=>sync());
+
+const dirty=()=>S.W!=W||diff(crop(S.p,S.W,W),px,W)[0];
+function sync(e){if(!TW)return e&&st('open me in Telegram');if(busy||!e&&(Date.now()-lt<1100||!dirty()))return;clearTimeout(tm);lt=Date.now();
+ let[r,ok]=diff(crop(S.p,S.W,W),px,W);busy=1;st('saving…');
+ TW.request((e?'!':'')+A[W]+r).then(a=>{setS(a.result);st(e?'sent ✓':ok?'saved ✓':'saving…')},z=>st('⚠ '+(z.code||z.message))).finally(()=>{busy=0;later()})}
+function setS(s){let d=s&&dec(s);if(!d)return;let cl=!dirty();S=d;B=s;if(cl&&!down&&ax<0){W=d.W;px=d.p.slice();fit()}save()}
+function save(){try{localStorage.setItem('p',JSON.stringify([enc(W,px),B]))}catch(e){}}
+
+let L;try{L=JSON.parse(localStorage.getItem('p'))}catch(e){}
+B=TW&&TW.chatData||'';S=dec(B)||{W:16,p:E(16)};
+let d=L&&(L[1]==B||L[0]!=L[1])&&dec(L[0])||S;W=d.W;px=d.p.slice();
+setTool('pen');setCol(1);toggles();fit();
+window.ResizeObserver&&new ResizeObserver(()=>fit()).observe($('pal'));
+if(TW){TW.onEvent('chatDataChanged',()=>setS(TW.chatData));TW.onEvent('activated',()=>sync());TW.ready();sync()}
+</script>

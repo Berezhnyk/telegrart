@@ -1,0 +1,15 @@
+{
+  "name": "telegrart",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Telegram bot that sends an interactive pixel-art editor as a widget message",
+  "type": "module",
+  "engines": {
+    "node": ">=22.2"
+  },
+  "scripts": {
+    "start": "node bot.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "node --test"
+  }
+}
